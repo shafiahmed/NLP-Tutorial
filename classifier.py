@@ -1,123 +1,143 @@
-from preprocessor import toy_corpus, preprocess
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 from math import sqrt
-from gensim.corpora import Dictionary
-from gensim.similarities import MatrixSimilarity
-from gensim.models import LsiModel
-from scipy.spatial.distance import cosine
-import numpy
+import gensim
 from sklearn.svm import SVC
-from os import linesep as nl
+import os
+
+
+def vec2dense(vec, num_terms):
+
+    '''
+    Helper function to convert sparse Gensim format vectors
+    into lists of numbers for display purposes.
+    '''
+    return list(gensim.matutils.corpus2dense([vec], num_terms=num_terms).T[0])
 
 if __name__ == '__main__':
 
-        print "**********************",nl,nl
-        #Load in corpus and preprocess as we did in preprocessor.py
-        docs = dict((name,preprocess(doc)) for name,doc in toy_corpus())
+    #Load in corpus, remove newlines, make strings lower-case
+    docs = {}
+    corpus_dir = 'corpus'
 
-        #Display the initial preprocessed text corpus
-        print "---Initial Preprocessed Corpus---"
-        for filename in docs:
-                print filename,":",docs[filename]
-        print
+    for filename in os.listdir(corpus_dir):
 
-        #Build the dictionary and filter out rare terms
-        dct = Dictionary(docs.values())
-        
-        unfiltered = dct.token2id.keys()
-        dct.filter_extremes(no_below=2)
-        filtered = dct.token2id.keys()
+        path = os.path.join(corpus_dir, filename)
+        doc = open(path).read().strip().lower()
+        docs[filename] = doc
 
-        filtered_out = set(unfiltered) - set(filtered)
-        print "The following super common/rare words were filtered out...", list(filtered_out)
-        vocab_string = '[' + ', '.join(dct.token2id.keys()) + ']'
-        print "Vocabulary after filtering: ", vocab_string, nl, nl
+    names = docs.keys()
 
-        print "---BoW Corpus---"
-        for file_name in docs.keys():
+    #Remove stopwords and split on spaces
+    print "\n---Corpus with Stopwords Removed---"
+    preprocessed_docs = {}
+    stop = ['the', 'of', 'a', 'at', 'is']
 
-                #Express our docs as BoW vectors
-                sparse = dct.doc2bow(docs[file_name])
-                docs[file_name] = sparse 
-                sparse = dict(sparse)
+    for name in names:
 
-                #Converting from gensim format to more familiar dense format
-                dense = [sparse[i] if i in sparse.keys() else 0 
-                                        for i in range(len(dct))]
-                print file_name, ":", dense
+        text = docs[name].split()
+        preprocessed = [word for word in text if word not in stop]
+        preprocessed_docs[name] = preprocessed
+        print filename, ":", preprocessed
 
-        print nl
-        names = docs.keys()
-        vecs = [docs[key] for key in names]
-        lsi_vecs = []
+    #Build the dictionary and filter out rare terms
+    dct = gensim.corpora.Dictionary(preprocessed_docs.values())
+    unfiltered = dct.token2id.keys()
+    dct.filter_extremes(no_below=2)
+    filtered = dct.token2id.keys()
+    filtered_out = set(unfiltered) - set(filtered)
 
-        print "---LSI Model---"
-        num_topics = 2
-        lsi_model = LsiModel(vecs, num_topics=num_topics)
-        for i in range(len(names)):
+    print "The following super common/rare words were filtered out..."
+    print list(filtered_out), '\n'
 
-                name = names[i]
-                vec = docs[name]
+    print "Vocabulary after filtering..."
+    print dct.token2id.keys(), '\n\n'
 
-                sparse = dict(lsi_model[vec])
-                dense = [sparse[i] if i in sparse.keys() else 0
-                                        for i in range(num_topics)]
-                print name, ':', dense
-                lsi_vecs.append(dense)
+    #Build Bag of Words Vectors out of preprocessed corpus
+    print "---Bag of Words Corpus---"
+    bow_docs = {}
 
-        print nl
+    for name in names:
 
-        print "---Unit Vectorization---"
-        for i in range(len(lsi_vecs)):
-                
-                norm = sqrt(sum(num**2 for num in lsi_vecs[i]))
-                unit_vec = [num/norm for num in lsi_vecs[i]]
-                print names[i],':',unit_vec
-                lsi_vecs[i] = unit_vec
+        #Express our docs as BoW vectors
+        sparse = dct.doc2bow(preprocessed_docs[name])
+        bow_docs[name] = sparse
+        dense = vec2dense(sparse, num_terms=len(dct))
+        print name, ":", dense
 
-        print nl
-        print "---Document Similarities---"
-        
-        index = MatrixSimilarity(lsi_model[vecs])
-        for i in range(len(names)):
-                
-                name = names[i]
-                vec = lsi_model[docs[name]]
+    print '\n'
 
-                sims = index[vec]
-                sims = sorted(enumerate(sims), key=lambda item: -item[1])
+    #Dimensionality reduction using LSI. Go from 6D to 2D.
+    print "---LSI Model---"
+    lsi_docs = {}
 
-                #Similarities are a list of tuples of the form (doc #, score)
-                #In order to extract the doc # we take the first value in the tuple
+    num_topics = 2
+    lsi_model = gensim.models.LsiModel(bow_docs.values(), num_topics=num_topics)
+    for name in names:
 
-                #Doc # is stored in tuple as numpy format, must cast to int
-                match = int(sims[0][0]) if int(sims[0][0]) != i else int(sims[1][0])
-                match = names[match]
-                print name, "is most similar to...", match
+        vec = bow_docs[name]
+        sparse = lsi_model[vec]
+        dense = vec2dense(sparse, num_topics)
+        lsi_docs[name] = sparse
+        print name, ':', dense
 
-        print nl
-        print "---Classification---"
+    print '\n'
+    print "---Unit Vectorization---"
+    unit_vecs = {}
 
-        dog1 = lsi_vecs[names.index('dog1.txt')]
-        sandwich1 = lsi_vecs[names.index('sandwich1.txt')]
-       
-        train = [dog1, sandwich1]
+    for name in names:
 
-        # The label '1' represents the 'dog' category
-        # The label '2' represents the 'sandwich' category
+        vec = vec2dense(lsi_docs[name], num_topics)
+        norm = sqrt(sum(num ** 2 for num in vec))
+        unit_vec = [num / norm for num in vec]
+        unit_vecs[name] = unit_vec
+        print name, ':', unit_vec
 
-        label_to_name = dict([(1,'dogs'),(2, 'sandwiches')])
-        labels = [1,2]
-        classifier = SVC()
-        classifier.fit(train,labels)
+    print '\n'
 
-        for i in range(len(names)):
+    #Take cosine distances between docs and show best matches
+    print "---Document Similarities---"
 
-                name = names[i]
-                vec = lsi_vecs[i]
+    index = gensim.similarities.MatrixSimilarity(lsi_docs.values())
+    for i, name in enumerate(names):
 
-                label = classifier.predict([vec])[0]
-                cls = label_to_name[label]
-                print name,'is a document about', cls
+        vec = lsi_docs[name]
+        sims = index[vec]
+        sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
+        #Similarities are a list of tuples of the form (doc #, score)
+        #In order to extract the doc # we take first value in the tuple
+        #Doc # is stored in tuple as numpy format, must cast to int
 
+        if int(sims[0][0]) != i:
+            match = int(sims[0][0])
+        else:
+            match = int(sims[1][0])
 
+        match = names[match]
+        print name, "is most similar to...", match
+
+    print '\n'
+    print "---Classification---"
+
+    dog1 = unit_vecs['dog1.txt']
+    sandwich1 = unit_vecs['sandwich1.txt']
+
+    train = [dog1, sandwich1]
+
+    # The label '1' represents the 'dog' category
+    # The label '2' represents the 'sandwich' category
+
+    label_to_name = dict([(1, 'dogs'), (2, 'sandwiches')])
+    labels = [1, 2]
+    classifier = SVC()
+    classifier.fit(train, labels)
+
+    for name in names:
+
+        vec = unit_vecs[name]
+        label = classifier.predict([vec])[0]
+        cls = label_to_name[label]
+        print name, 'is a document about', cls
+
+    print '\n'
