@@ -44,11 +44,11 @@ if __name__ == '__main__':
     filtered = dct.token2id.keys()
     filtered_out = set(unfiltered) - set(filtered)
 
-    print "The following super common/rare words were filtered out..."
+    print "\nThe following super common/rare words were filtered out..."
     print list(filtered_out), '\n'
 
     print "Vocabulary after filtering..."
-    print dct.token2id.keys(), '\n\n'
+    print dct.token2id.keys(), '\n'
 
     #Build Bag of Words Vectors out of preprocessed corpus
     print "---Bag of Words Corpus---"
