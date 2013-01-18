@@ -34,7 +34,7 @@ if __name__ == '__main__':
         text = docs[name].split()
         preprocessed = [word for word in text if word not in stop]
         preprocessed_docs[name] = preprocessed
-        print filename, ":", preprocessed
+        print name, ":", preprocessed
 
     #Build the dictionary and filter out rare terms
     dct = gensim.corpora.Dictionary(preprocessed_docs.values())
@@ -65,7 +65,8 @@ if __name__ == '__main__':
 
     lsi_docs = {}
     num_topics = 2
-    lsi_model = gensim.models.LsiModel(bow_docs.values(), num_topics=num_topics)
+    lsi_model = gensim.models.LsiModel(bow_docs.values(),
+                                       num_topics=num_topics)
     for name in names:
 
         vec = bow_docs[name]
