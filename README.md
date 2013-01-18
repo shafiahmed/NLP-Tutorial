@@ -12,7 +12,7 @@ Files
     corpus -- A directory of 4 tiny text files
     .gitignore -- Files in repo for Git to ignore
     classifier.py -- The main file that does everything
-    requirements.txt -- File used by pip (python's version of gem) to download dependencies
+    requirements.txt -- File used by pip to download dependencies
 
 ============
 Dependencies
