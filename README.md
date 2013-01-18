@@ -14,6 +14,14 @@ Files
     classifier.py -- The main file that does everything
     requirements.txt -- File used by pip to download dependencies
 
+========
+Download
+========
+
+All you need to do is clone the repo:
+
+    git clone https://github.com/Scripted/NLP-Tutorial
+    
 ============
 Dependencies
 ============
@@ -23,3 +31,13 @@ In a perfect world, running "pip install -r requirements.txt" should download al
 , [Scipy](http://www.scipy.org/)
 , [Gensim](http://radimrehurek.com/gensim/)
 , [Scikit-Learn](http://scikit-learn.org/stable/)
+
+=======
+Running
+=======
+
+Easy enough:
+
+    python classifier.py
+    
+The output shows the various steps of the algorithm as it works.
