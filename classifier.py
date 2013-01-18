@@ -7,14 +7,13 @@ import os
 
 
 def vec2dense(vec, num_terms):
-    
+
     '''Convert from sparse gensim format to dense list of numbers'''
     return list(gensim.matutils.corpus2dense([vec], num_terms=num_terms).T[0])
 
 if __name__ == '__main__':
 
     #Load in corpus, remove newlines, make strings lower-case
-
     docs = {}
     corpus_dir = 'corpus'
     for filename in os.listdir(corpus_dir):
