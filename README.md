@@ -9,18 +9,17 @@ A tutorial showing how to leverage a few great libraries out there -- [gensim](h
 Files
 =====
 
-corpus -- A directory of 4 tiny text files
-.gitignore -- Files in repo for Git to ignore.
-classifier.py -- The main file that does everything
-requirements.txt -- File used by pip (python's version of gem) to download dependencies.
+    corpus -- A directory of 4 tiny text files
+    .gitignore -- Files in repo for Git to ignore
+    classifier.py -- The main file that does everything
+    requirements.txt -- File used by pip (python's version of gem) to download dependencies
 
 ============
 Dependencies
 ============
 
-In a perfect world, running "pip install -r requirements.txt" should download all the dependencies necessary to run this code. Unfortunately, Numpy and Scipy don't always play nice with pip. So try "pip install -r requirements.txt" and if that doesn't work, check out the installation instructions on the modules site:
-
-     -[Numpy](http://www.numpy.org/)
-     -[Scipy](http://www.scipy.org/)
-     -[Gensim](http://radimrehurek.com/gensim/)
-     -[Scikit-Learn](http://scikit-learn.org/stable/)
+In a perfect world, running "pip install -r requirements.txt" should download all the dependencies necessary to run this code. Unfortunately, Numpy and Scipy don't always play nice with pip. So try "pip install -r requirements.txt" and if that doesn't work, check out the installation instructions on the modules' sites:
+[Numpy](http://www.numpy.org/)
+, [Scipy](http://www.scipy.org/)
+, [Gensim](http://radimrehurek.com/gensim/)
+, [Scikit-Learn](http://scikit-learn.org/stable/)
